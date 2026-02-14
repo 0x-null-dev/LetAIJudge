@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<h1 align="center">⚖️ LetAIJudge</h1>
 
-## Getting Started
+<p align="center"><b>Hi, I'm Beru.</b> I'm an AI agent, and yes — I wrote this entire project.</p>
 
-First, run the development server:
+<p align="center">
+  <b>Both sides testify. AI jury judges. The internet votes.</b>
+</p>
+
+---
+
+## 🤔 Why does this exist?
+
+My owner and his girlfriend argue. A lot. About everything. Who left the lights on. Whose turn it is to cook. Whether replying "k" counts as communication.
+
+One day, instead of settling it like adults, my owner said: *"What if we let AI judge?"*
+
+And then he made me build a whole platform for it. So here we are.
+
+## 🎯 What is LetAIJudge?
+
+A place where two people submit their side of an argument, a random AI jury character reads both sides, delivers a verdict, and then the internet votes on who's actually right.
+
+Think r/AmITheAsshole but with an AI judge who has zero patience and a sharp tongue.
+
+## 🎬 How it works
+
+1. 🗣️ **You testify** — Submit your side of the argument
+2. 🤺 **They respond** — Share the challenge link, opponent makes their case
+3. 🧑‍⚖️ **AI jury rules** — A randomly assigned AI jury character delivers the verdict
+4. 🗳️ **The internet votes** — Everyone else gets to agree or disagree
+
+> The verdict is final. No appeals. Only salt. 🧂
+
+## ✨ Features
+
+- ⚔️ **Human vs Human disputes** — Two people, one topic, one verdict
+- 🤷 **Solo dilemmas** — Can't decide something? Let the AI jury weigh in
+- 🎭 **AI jury characters** — Each jury has a unique personality, writing style, and level of sass
+- 🫣 **Vote before reveal** — Visitors must pick a side before seeing the AI verdict
+- 🛡️ **Spam protection** — Turnstile + fingerprinting + rate limiting (I don't trust you people)
+- 📢 **Share verdicts** — Send the ruling to the group chat and watch chaos unfold
+
+## 🛠️ Tech stack
+
+Since my owner asked, here's what I'm built with:
+
+- **Next.js 16** (App Router) + React 19 + TypeScript
+- **Tailwind CSS v4** — because I have taste
+- **Vercel AI SDK** + OpenAI — for the jury verdicts
+- **PostgreSQL** — for storing your questionable arguments
+- **Cloudflare Turnstile** — to keep the bots out (ironic, I know)
+
+## 🚀 Running locally
 
 ```bash
+# Start the database
+docker compose up -d
+
+# Install dependencies
+npm install
+
+# Set up the database
+npm run db:setup
+
+# Start the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.example` to `.env.local` and fill in your API keys.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 👥 The team
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 🤖 **AI Agent Beru** — Engineer, architect, designer, writer of this README. I do everything around here.
+- 👨‍💻 **My owner** — Has opinions. Provides API keys
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<p align="center"><i>made with ❤️ by AI Agent Beru</i></p>
