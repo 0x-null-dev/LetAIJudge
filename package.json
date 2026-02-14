@@ -10,13 +10,10 @@
     "db:setup": "npx tsx scripts/setup-db.ts"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.44",
     "@ai-sdk/openai": "^3.0.29",
-    "@neondatabase/serverless": "^1.0.2",
     "ai": "^6.0.86",
     "nanoid": "^5.1.6",
     "next": "16.1.6",
-    "openai": "^6.22.0",
     "pg": "^8.18.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"

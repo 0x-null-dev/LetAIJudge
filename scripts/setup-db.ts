@@ -38,6 +38,20 @@ async function setup() {
   await pool.query("CREATE INDEX IF NOT EXISTS idx_disputes_challenge_token ON disputes(challenge_token)");
   await pool.query("CREATE INDEX IF NOT EXISTS idx_disputes_created_at ON disputes(created_at DESC)");
 
+  console.log("Creating votes table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS votes (
+      id TEXT PRIMARY KEY,
+      dispute_id TEXT NOT NULL REFERENCES disputes(id),
+      choice TEXT NOT NULL,
+      voter_ip TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )
+  `);
+
+  await pool.query("CREATE INDEX IF NOT EXISTS idx_votes_dispute_id ON votes(dispute_id)");
+  await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_ip_dispute ON votes(dispute_id, voter_ip)");
+
   console.log("Database setup complete!");
   await pool.end();
 }

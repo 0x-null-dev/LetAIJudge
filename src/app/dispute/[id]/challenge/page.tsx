@@ -139,6 +139,9 @@ function ChallengePage({
         return;
       }
 
+      // Mark as participant so they skip voting on the verdict page
+      localStorage.setItem(`participant-${id}`, "true");
+
       // Verdict is generated — redirect to the dispute page
       router.push(`/dispute/${id}`);
     } catch {

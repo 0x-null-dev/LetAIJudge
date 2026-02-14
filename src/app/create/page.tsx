@@ -50,6 +50,9 @@ function CreateDispute() {
         return;
       }
 
+      // Mark as participant so they skip voting on the verdict page
+      localStorage.setItem(`participant-${data.disputeId}`, "true");
+
       setResult({
         challengeUrl: data.challengeUrl,
         publicUrl: data.publicUrl,
