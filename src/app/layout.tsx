@@ -35,12 +35,20 @@ export default function RootLayout({
                 LetAI<span className="text-accent">Judge</span>
               </span>
             </a>
-            <a
-              href="/create"
-              className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-            >
-              Start a dispute
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href="/create"
+                className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+              >
+                Start a dispute
+              </a>
+              <a
+                href="/create?mode=solo"
+                className="rounded-full border border-accent px-4 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-white"
+              >
+                AITA?
+              </a>
+            </div>
           </div>
         </header>
         <main className="mx-auto max-w-2xl px-4 py-6 flex-1">{children}</main>

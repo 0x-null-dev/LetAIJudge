@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createDispute } from "@/lib/disputes";
+import { createDispute, createAITADispute } from "@/lib/disputes";
+import { generateAITAVerdict } from "@/lib/verdict";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { topic, personAName, personAArgument } = body;
+    const { topic, personAName, personAArgument, type } = body;
 
     // Validation
     if (!topic || !personAName || !personAArgument) {
@@ -28,20 +29,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (personAArgument.length > 500) {
+    const maxArgLength = type === "solo" ? 2000 : 500;
+    if (personAArgument.length > maxArgLength) {
       return NextResponse.json(
-        { error: "Argument must be under 500 characters" },
+        { error: `Story must be under ${maxArgLength} characters` },
         { status: 400 }
       );
     }
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    // AITA flow: create + generate verdict immediately
+    if (type === "solo") {
+      const { disputeId } = await createAITADispute(
+        topic.trim(),
+        personAName.trim(),
+        personAArgument.trim()
+      );
+
+      try {
+        await generateAITAVerdict(disputeId);
+      } catch (verdictError) {
+        console.error("AITA verdict generation failed:", verdictError);
+        return NextResponse.json(
+          { error: "Failed to generate AI verdict. Please try again." },
+          { status: 502 }
+        );
+      }
+
+      return NextResponse.json({
+        disputeId,
+        publicUrl: `${appUrl}/dispute/${disputeId}`,
+        type: "solo",
+      });
+    }
+
+    // Dispute flow (unchanged)
     const { disputeId, challengeToken } = await createDispute(
       topic.trim(),
       personAName.trim(),
       personAArgument.trim()
     );
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const publicUrl = `${appUrl}/dispute/${disputeId}`;
     const challengeUrl = `${appUrl}/dispute/${disputeId}/challenge?token=${challengeToken}`;
 
@@ -49,6 +78,7 @@ export async function POST(request: NextRequest) {
       disputeId,
       publicUrl,
       challengeUrl,
+      type: "dispute",
     });
   } catch (error) {
     console.error("Error creating dispute:", error);

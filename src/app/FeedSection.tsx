@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 
 interface FeedDispute {
   id: string;
+  type: "dispute" | "solo";
   topic: string;
   person_a_name: string;
-  person_b_name: string;
+  person_b_name: string | null;
   vote_count: number;
 }
 
@@ -88,9 +89,18 @@ export default function FeedSection() {
             </p>
             <div className="flex items-center justify-between mt-3">
               <p className="text-xs text-muted">
-                {d.person_a_name}{" "}
-                <span className="font-semibold text-accent">vs</span>{" "}
-                {d.person_b_name}
+                {d.type === "solo" ? (
+                  <>
+                    {d.person_a_name}&apos;s story{" "}
+                    <span className="font-semibold text-accent">&middot; AITA</span>
+                  </>
+                ) : (
+                  <>
+                    {d.person_a_name}{" "}
+                    <span className="font-semibold text-accent">vs</span>{" "}
+                    {d.person_b_name}
+                  </>
+                )}
               </p>
               <div className="flex items-center gap-2">
                 {d.vote_count > 0 && (
@@ -99,7 +109,7 @@ export default function FeedSection() {
                   </span>
                 )}
                 <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent group-hover:bg-accent group-hover:text-white transition-colors">
-                  Vote
+                  {d.type === "solo" ? "Judge" : "Vote"}
                 </span>
               </div>
             </div>

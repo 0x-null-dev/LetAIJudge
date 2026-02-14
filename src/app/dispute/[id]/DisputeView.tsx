@@ -15,6 +15,7 @@ interface Verdict {
 
 interface Props {
   disputeId: string;
+  type: "dispute" | "solo";
   topic: string;
   personAName: string;
   personAArgument: string;
@@ -26,6 +27,7 @@ interface Props {
 
 export default function DisputeView({
   disputeId,
+  type,
   topic,
   personAName,
   personAArgument,
@@ -34,6 +36,8 @@ export default function DisputeView({
   juryName,
   juryBio,
 }: Props) {
+  const isSolo = type === "solo";
+
   const [revealed, setRevealed] = useState(false);
   const [isParticipant, setIsParticipant] = useState(false);
   const [yourChoice, setYourChoice] = useState<string | null>(null);
@@ -141,13 +145,17 @@ export default function DisputeView({
   if (loading) {
     return (
       <div className="py-12 text-center">
-        <div className="animate-pulse-slow text-muted">Loading dispute...</div>
+        <div className="animate-pulse-slow text-muted">Loading...</div>
       </div>
     );
   }
 
-  const winnerName =
-    verdict?.winner === "person_a"
+  // Winner label: for AITA spell it out, for disputes use person names
+  const winnerLabel = isSolo
+    ? verdict?.winner === "person_a"
+      ? "The Asshole"
+      : "Not The Asshole"
+    : verdict?.winner === "person_a"
       ? personAName
       : verdict?.winner === "person_b"
         ? personBName
@@ -166,63 +174,80 @@ export default function DisputeView({
       ? Math.round((counts.person_b / counts.total) * 100)
       : 0;
 
+  // Labels for vote bar
+  const labelA = isSolo ? "Asshole" : personAName;
+  const labelB = isSolo ? "Not" : personBName;
+
   return (
     <div className="py-2 sm:py-6 flex flex-col gap-6">
       {/* Topic header */}
       <div className="text-center">
         <p className="text-sm text-muted uppercase tracking-wide font-medium mb-1">
-          The dispute
+          {isSolo ? "Am I The Asshole?" : "The dispute"}
         </p>
         <h1 className="text-2xl font-bold">
-          {personAName} vs {personBName}
+          {isSolo ? `${personAName}\u2019s story` : `${personAName} vs ${personBName}`}
         </h1>
         <p className="text-muted mt-1">&ldquo;{topic}&rdquo;</p>
       </div>
 
-      {/* Both arguments */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div
-          className={`rounded-xl border p-4 transition-all ${
-            revealed && verdict?.winner === "person_a"
-              ? "border-success bg-success/5"
-              : "border-card-border bg-card-bg"
-          }`}
-        >
+      {/* Arguments */}
+      {isSolo ? (
+        /* AITA: single story card */
+        <div className="rounded-xl border border-card-border bg-card-bg p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="font-semibold">{personAName}</span>
-            {revealed && verdict?.winner === "person_a" && (
-              <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                Winner
-              </span>
-            )}
           </div>
-          <p className="text-sm leading-relaxed">{personAArgument}</p>
+          <p className="text-sm leading-relaxed whitespace-pre-line">{personAArgument}</p>
         </div>
+      ) : (
+        /* Dispute: two-column grid */
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div
+            className={`rounded-xl border p-4 transition-all ${
+              revealed && verdict?.winner === "person_a"
+                ? "border-success bg-success/5"
+                : "border-card-border bg-card-bg"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-semibold">{personAName}</span>
+              {revealed && verdict?.winner === "person_a" && (
+                <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                  Winner
+                </span>
+              )}
+            </div>
+            <p className="text-sm leading-relaxed">{personAArgument}</p>
+          </div>
 
-        <div
-          className={`rounded-xl border p-4 transition-all ${
-            revealed && verdict?.winner === "person_b"
-              ? "border-success bg-success/5"
-              : "border-card-border bg-card-bg"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-semibold">{personBName}</span>
-            {revealed && verdict?.winner === "person_b" && (
-              <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                Winner
-              </span>
-            )}
+          <div
+            className={`rounded-xl border p-4 transition-all ${
+              revealed && verdict?.winner === "person_b"
+                ? "border-success bg-success/5"
+                : "border-card-border bg-card-bg"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-semibold">{personBName}</span>
+              {revealed && verdict?.winner === "person_b" && (
+                <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                  Winner
+                </span>
+              )}
+            </div>
+            <p className="text-sm leading-relaxed">{personBArgument}</p>
           </div>
-          <p className="text-sm leading-relaxed">{personBArgument}</p>
         </div>
-      </div>
+      )}
 
       {/* Vote prompt (visitors only, before voting) */}
       {!revealed && !isParticipant && (
         <div className="text-center py-2">
           <p className="text-sm text-muted mb-3">
-            Who&apos;s right? Vote to reveal the AI verdict.
+            {isSolo
+              ? "What do you think? Vote to reveal the AI verdict."
+              : "Who\u2019s right? Vote to reveal the AI verdict."}
           </p>
           <div className="flex gap-3 justify-center">
             <button
@@ -230,7 +255,7 @@ export default function DisputeView({
               disabled={voting}
               className="flex-1 max-w-[180px] rounded-full border border-card-border bg-card-bg px-6 py-3 text-base font-semibold transition-all hover:border-accent hover:text-accent disabled:opacity-50"
             >
-              {personAName}
+              {isSolo ? "The Asshole" : personAName}
             </button>
             <span className="text-muted self-center text-sm">or</span>
             <button
@@ -238,7 +263,7 @@ export default function DisputeView({
               disabled={voting}
               className="flex-1 max-w-[180px] rounded-full border border-card-border bg-card-bg px-6 py-3 text-base font-semibold transition-all hover:border-accent hover:text-accent disabled:opacity-50"
             >
-              {personBName}
+              {isSolo ? "Not The Asshole" : personBName}
             </button>
           </div>
         </div>
@@ -260,12 +285,25 @@ export default function DisputeView({
                   : "You disagreed with the AI jury!"}
               </p>
               <p className="text-xs text-muted mt-0.5">
-                You sided with{" "}
-                <span className="font-semibold">
-                  {yourChoice === "person_a" ? personAName : personBName}
-                </span>
-                {" "}&middot; AI ruled for{" "}
-                <span className="font-semibold">{winnerName}</span>
+                {isSolo ? (
+                  <>
+                    You voted{" "}
+                    <span className="font-semibold">
+                      {yourChoice === "person_a" ? "The Asshole" : "Not The Asshole"}
+                    </span>
+                    {" "}&middot; AI ruled{" "}
+                    <span className="font-semibold">{winnerLabel}</span>
+                  </>
+                ) : (
+                  <>
+                    You sided with{" "}
+                    <span className="font-semibold">
+                      {yourChoice === "person_a" ? personAName : personBName}
+                    </span>
+                    {" "}&middot; AI ruled for{" "}
+                    <span className="font-semibold">{winnerLabel}</span>
+                  </>
+                )}
               </p>
             </div>
           )}
@@ -275,7 +313,7 @@ export default function DisputeView({
             <div className="py-1">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-xs font-medium w-16 text-right truncate">
-                  {personAName}
+                  {labelA}
                 </span>
                 <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden flex">
                   <div
@@ -300,7 +338,7 @@ export default function DisputeView({
                   </div>
                 </div>
                 <span className="text-xs font-medium w-16 truncate">
-                  {personBName}
+                  {labelB}
                 </span>
               </div>
               <p className="text-[10px] text-muted text-center">
@@ -324,9 +362,11 @@ export default function DisputeView({
                 </div>
               </div>
 
-              {winnerName && (
+              {winnerLabel && (
                 <p className="text-sm font-semibold text-accent mb-2">
-                  Ruled in favor of {winnerName}
+                  {isSolo
+                    ? `Verdict: ${winnerLabel}`
+                    : `Ruled in favor of ${winnerLabel}`}
                 </p>
               )}
 

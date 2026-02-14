@@ -84,6 +84,44 @@ Put on pants, Mia. The couch isn't going anywhere.`,
   },
 ];
 
+const AITA_CASES = [
+  {
+    topic: "AITA for refusing to lend my car to my sister for a week?",
+    person_a_name: "Rachel",
+    person_a_argument:
+      "My sister wants to borrow my car for a week-long road trip with her friends. Last time she borrowed it, she returned it with a dent she 'didn't notice' and an empty gas tank. I'm still making payments on this car. She says I'm being petty and that family should help each other. My parents are calling me selfish. But it's MY car and she has a history of not taking care of things she borrows.",
+    verdict_winner: "person_b", // NTA
+    verdict_text: `NTA — you're not the asshole.
+
+Rachel, I hear your family's pressure, and I get it — "family helps family" sounds lovely on a greeting card. But here's what everyone's conveniently ignoring: your sister has already demonstrated she doesn't respect your property. A dent she "didn't notice"? An empty gas tank? That's not borrowing, that's negligence with plausible deniability.
+
+You're still making payments on this car. It's not a family heirloom gathering dust — it's an active financial obligation with your name on the loan. Your sister wanting a free rental for a week-long road trip with her friends doesn't create an obligation on your end.
+
+Your parents calling you "selfish" should try co-signing your car loan. Then they can have opinions about who drives it.`,
+    person_a_teaser: "Sister returned the car dented with an empty tank — now wants it for a whole week",
+    // person_a = YTA, person_b = NTA. Winner is person_b (NTA)
+    votes: { person_a: 8, person_b: 31 },
+  },
+  {
+    topic: "AITA for telling my friend their startup idea is bad?",
+    person_a_name: "Kevin",
+    person_a_argument:
+      "My best friend quit his stable job to build an app that's basically a worse version of something that already exists. He asked for my honest opinion at dinner and I gave it — I said the idea wasn't original and he should have a backup plan. He hasn't spoken to me in two weeks. His girlfriend texted me saying I crushed his dream. But he literally asked me to be honest. Was I supposed to lie?",
+    verdict_winner: "person_a", // YTA
+    verdict_text: `YTA — you're the asshole here.
+
+Kevin, I know you think you were "just being honest" because he asked. That's the classic defense of people who confuse honesty with a lack of tact. Yes, he asked for your opinion. No, that doesn't mean you had to deliver it like a Shark Tank rejection at dinner.
+
+There's a massive difference between "I have some concerns about the competitive landscape — want to talk through it?" and "your idea isn't original and you need a backup plan." One is helpful. The other is a grenade disguised as advice.
+
+He already quit his job. The decision was made. Your "honesty" didn't inform a decision — it just made him feel terrible about one he can't undo. Timing matters. Delivery matters. You can be honest AND supportive. You chose to be neither.
+
+Text him back. Lead with an apology, not an explanation.`,
+    person_a_teaser: "Best friend asked for honest feedback, got the truth, and hasn't spoken to him since",
+    votes: { person_a: 22, person_b: 15 },
+  },
+];
+
 async function seed() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -135,7 +173,43 @@ async function seed() {
     console.log(`  ✓ "${d.topic}" (${d.votes.person_a + d.votes.person_b} votes)`);
   }
 
-  console.log(`\nSeeded ${DISPUTES.length} disputes!`);
+  // Seed AITA cases
+  for (const d of AITA_CASES) {
+    const disputeId = nanoid(12);
+    const challengeToken = nanoid(24);
+
+    await pool.query(
+      `INSERT INTO disputes (id, type, topic, person_a_name, person_a_argument, jury_id, verdict_text, verdict_winner, person_a_teaser, status, challenge_token, completed_at)
+       VALUES ($1, 'solo', $2, $3, $4, 'judge-diana', $5, $6, $7, 'complete', $8, NOW())`,
+      [
+        disputeId,
+        d.topic,
+        d.person_a_name,
+        d.person_a_argument,
+        d.verdict_text,
+        d.verdict_winner,
+        d.person_a_teaser,
+        challengeToken,
+      ]
+    );
+
+    for (let i = 0; i < d.votes.person_a; i++) {
+      await pool.query(
+        "INSERT INTO votes (id, dispute_id, choice, voter_ip) VALUES ($1, $2, 'person_a', $3)",
+        [nanoid(16), disputeId, `seed-a-${i}`]
+      );
+    }
+    for (let i = 0; i < d.votes.person_b; i++) {
+      await pool.query(
+        "INSERT INTO votes (id, dispute_id, choice, voter_ip) VALUES ($1, $2, 'person_b', $3)",
+        [nanoid(16), disputeId, `seed-b-${i}`]
+      );
+    }
+
+    console.log(`  ✓ AITA: "${d.topic}" (${d.votes.person_a + d.votes.person_b} votes)`);
+  }
+
+  console.log(`\nSeeded ${DISPUTES.length} disputes + ${AITA_CASES.length} AITA cases!`);
   await pool.end();
 }
 

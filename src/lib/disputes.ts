@@ -39,6 +39,24 @@ export async function createDispute(
   return { disputeId: id, challengeToken };
 }
 
+export async function createAITADispute(
+  topic: string,
+  personAName: string,
+  personAArgument: string
+): Promise<{ disputeId: string }> {
+  const id = nanoid(12);
+  const challengeToken = nanoid(24);
+  const jury = getRandomJury();
+
+  await query(
+    `INSERT INTO disputes (id, type, topic, person_a_name, person_a_argument, jury_id, challenge_token, status)
+     VALUES ($1, 'solo', $2, $3, $4, $5, $6, 'pending')`,
+    [id, topic, personAName, personAArgument, jury.id, challengeToken]
+  );
+
+  return { disputeId: id };
+}
+
 export async function getDispute(id: string): Promise<Dispute | null> {
   const rows = await query<Dispute>("SELECT * FROM disputes WHERE id = $1", [id]);
   return rows[0] || null;
@@ -138,9 +156,10 @@ export async function saveVerdict(
 
 export interface FeedDispute {
   id: string;
+  type: "dispute" | "solo";
   topic: string;
   person_a_name: string;
-  person_b_name: string;
+  person_b_name: string | null;
   person_a_teaser: string | null;
   person_b_teaser: string | null;
   completed_at: string;
@@ -160,7 +179,7 @@ export async function getCompletedDisputes(options: {
       : "d.completed_at DESC";
 
   const disputes = await query<FeedDispute>(
-    `SELECT d.id, d.topic, d.person_a_name, d.person_b_name, d.person_a_teaser, d.person_b_teaser, d.completed_at,
+    `SELECT d.id, d.type, d.topic, d.person_a_name, d.person_b_name, d.person_a_teaser, d.person_b_teaser, d.completed_at,
             COUNT(v.id) FILTER (WHERE v.choice = 'person_a')::int AS votes_a,
             COUNT(v.id) FILTER (WHERE v.choice = 'person_b')::int AS votes_b,
             COUNT(v.id)::int AS vote_count

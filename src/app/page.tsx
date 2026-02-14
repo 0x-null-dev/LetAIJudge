@@ -19,12 +19,20 @@ export default function Home() {
         </p>
       </div>
 
-      <Link
-        href="/create"
-        className="rounded-full bg-accent px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-accent-hover"
-      >
-        Start a dispute
-      </Link>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Link
+          href="/create"
+          className="rounded-full bg-accent px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-accent-hover text-center"
+        >
+          Start a dispute
+        </Link>
+        <Link
+          href="/create?mode=solo"
+          className="rounded-full border-2 border-accent px-8 py-3 text-lg font-semibold text-accent transition-colors hover:bg-accent hover:text-white text-center"
+        >
+          Am I The Asshole?
+        </Link>
+      </div>
 
       {/* Comic strip "How it works" — full width, breaks out of max-w-2xl container */}
       <div className="mt-4 w-[calc(100vw-2rem)] max-w-5xl">

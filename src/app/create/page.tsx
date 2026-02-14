@@ -27,6 +27,8 @@ function CreateDispute() {
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const maxArgLength = isSolo ? 2000 : 500;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -40,6 +42,7 @@ function CreateDispute() {
           topic: topic.trim(),
           personAName: name.trim(),
           personAArgument: argument.trim(),
+          ...(isSolo && { type: "solo" }),
         }),
       });
 
@@ -52,6 +55,12 @@ function CreateDispute() {
 
       // Mark as participant so they skip voting on the verdict page
       localStorage.setItem(`participant-${data.disputeId}`, "true");
+
+      // AITA: redirect straight to verdict page (no opponent to share with)
+      if (isSolo) {
+        router.push(`/dispute/${data.disputeId}`);
+        return;
+      }
 
       setResult({
         challengeUrl: data.challengeUrl,
@@ -71,7 +80,7 @@ function CreateDispute() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  // Success state — show share link
+  // Success state — show share link (disputes only, AITA redirects)
   if (result) {
     return (
       <div className="animate-slide-up flex flex-col items-center gap-6 py-12 text-center">
@@ -166,11 +175,11 @@ function CreateDispute() {
   return (
     <div className="py-8">
       <h1 className="text-2xl font-bold mb-1">
-        {isSolo ? "What can't you decide?" : "What's the argument?"}
+        {isSolo ? "Am I The Asshole?" : "What's the argument?"}
       </h1>
       <p className="text-muted text-sm mb-6">
         {isSolo
-          ? "Describe your dilemma. The AI jury will weigh in."
+          ? "Tell your story. The AI jury will decide if you're the asshole."
           : "State your case. We'll send a link to the other person to make theirs."}
       </p>
 
@@ -199,14 +208,18 @@ function CreateDispute() {
             htmlFor="topic"
             className="mb-1 block text-sm font-medium"
           >
-            The topic / question
+            {isSolo ? "The situation" : "The topic / question"}
           </label>
           <input
             id="topic"
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g. Who should cook on weeknights?"
+            placeholder={
+              isSolo
+                ? "e.g. AITA for refusing to lend my car to my sister?"
+                : "e.g. Who should cook on weeknights?"
+            }
             maxLength={300}
             required
             className="w-full rounded-lg border border-card-border bg-card-bg px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
@@ -219,19 +232,25 @@ function CreateDispute() {
             htmlFor="argument"
             className="mb-1 block text-sm font-medium"
           >
-            Your side of the story
+            {isSolo ? "Your story" : "Your side of the story"}
           </label>
           <textarea
             id="argument"
             value={argument}
             onChange={(e) => setArgument(e.target.value)}
-            placeholder="Make your case. Be specific — the AI jury will judge based on what you write here."
-            maxLength={500}
+            placeholder={
+              isSolo
+                ? "Tell the full story. Be honest — the AI jury reads between the lines."
+                : "Make your case. Be specific — the AI jury will judge based on what you write here."
+            }
+            maxLength={maxArgLength}
             required
-            rows={5}
+            rows={isSolo ? 8 : 5}
             className="w-full rounded-lg border border-card-border bg-card-bg px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none"
           />
-          <p className="mt-1 text-xs text-muted">{argument.length}/500</p>
+          <p className="mt-1 text-xs text-muted">
+            {argument.length}/{maxArgLength}
+          </p>
         </div>
 
         {error && (
@@ -245,7 +264,13 @@ function CreateDispute() {
           disabled={loading || !name.trim() || !topic.trim() || !argument.trim()}
           className="rounded-full bg-accent px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Filing your case..." : "Submit your side"}
+          {loading
+            ? isSolo
+              ? "The jury is deliberating..."
+              : "Filing your case..."
+            : isSolo
+              ? "Submit for judgment"
+              : "Submit your side"}
         </button>
       </form>
     </div>
