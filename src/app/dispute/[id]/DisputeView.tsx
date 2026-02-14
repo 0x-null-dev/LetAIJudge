@@ -41,6 +41,7 @@ export default function DisputeView({
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [voting, setVoting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [nextDisputeId, setNextDisputeId] = useState<string | null>(null);
 
   useEffect(() => {
     const participant = localStorage.getItem(`participant-${disputeId}`);
@@ -66,6 +67,7 @@ export default function DisputeView({
           if (data.counts) setCounts(data.counts);
         })
         .catch(() => {});
+      fetchNextDispute();
       setLoading(false);
       return;
     }
@@ -85,11 +87,13 @@ export default function DisputeView({
           if (data.yourChoice) {
             localStorage.setItem(`vote-${disputeId}`, data.yourChoice);
           }
+          fetchNextDispute();
         }
       } catch {
         if (localVote) {
           setRevealed(true);
           setYourChoice(localVote);
+          fetchNextDispute();
         }
       } finally {
         setLoading(false);
@@ -98,6 +102,15 @@ export default function DisputeView({
 
     checkVoteStatus();
   }, [disputeId]);
+
+  function fetchNextDispute() {
+    fetch(`/api/disputes/next?exclude=${disputeId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.id) setNextDisputeId(data.id);
+      })
+      .catch(() => {});
+  }
 
   async function handleVote(choice: "person_a" | "person_b") {
     setVoting(true);
@@ -116,6 +129,7 @@ export default function DisputeView({
         setCounts(data.counts);
         setVerdict(data.verdict);
         localStorage.setItem(`vote-${disputeId}`, choice);
+        fetchNextDispute();
       }
     } catch {
       // User can try again
@@ -139,6 +153,10 @@ export default function DisputeView({
         ? personBName
         : null;
 
+  // Did the user agree with the AI?
+  const agreedWithAI =
+    yourChoice && verdict ? yourChoice === verdict.winner : null;
+
   const personAPercent =
     counts && counts.total > 0
       ? Math.round((counts.person_a / counts.total) * 100)
@@ -149,7 +167,7 @@ export default function DisputeView({
       : 0;
 
   return (
-    <div className="py-6 flex flex-col gap-6">
+    <div className="py-2 sm:py-6 flex flex-col gap-6">
       {/* Topic header */}
       <div className="text-center">
         <p className="text-sm text-muted uppercase tracking-wide font-medium mb-1">
@@ -226,12 +244,35 @@ export default function DisputeView({
         </div>
       )}
 
-      {/* Revealed section: vote results then verdict */}
+      {/* Revealed section */}
       {revealed && (
         <>
+          {/* "You agreed/disagreed" badge */}
+          {agreedWithAI !== null && !isParticipant && (
+            <div
+              className={`text-center py-2 animate-slide-up ${
+                agreedWithAI ? "text-success" : "text-accent"
+              }`}
+            >
+              <p className="text-lg font-bold">
+                {agreedWithAI
+                  ? "You agreed with the AI jury!"
+                  : "You disagreed with the AI jury!"}
+              </p>
+              <p className="text-xs text-muted mt-0.5">
+                You sided with{" "}
+                <span className="font-semibold">
+                  {yourChoice === "person_a" ? personAName : personBName}
+                </span>
+                {" "}&middot; AI ruled for{" "}
+                <span className="font-semibold">{winnerName}</span>
+              </p>
+            </div>
+          )}
+
           {/* Vote results bar */}
           {counts && counts.total > 0 && (
-            <div className="py-2">
+            <div className="py-1">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-xs font-medium w-16 text-right truncate">
                   {personAName}
@@ -264,14 +305,6 @@ export default function DisputeView({
               </div>
               <p className="text-[10px] text-muted text-center">
                 {counts.total} vote{counts.total !== 1 ? "s" : ""}
-                {yourChoice && !isParticipant && (
-                  <>
-                    {" "}&middot; You sided with{" "}
-                    <span className="font-semibold">
-                      {yourChoice === "person_a" ? personAName : personBName}
-                    </span>
-                  </>
-                )}
               </p>
             </div>
           )}
@@ -300,6 +333,21 @@ export default function DisputeView({
               <div className="text-sm leading-relaxed whitespace-pre-line">
                 {verdict.text}
               </div>
+            </div>
+          )}
+
+          {/* Next case — binge loop */}
+          {nextDisputeId && (
+            <div className="text-center pt-2 animate-slide-up">
+              <a
+                href={`/dispute/${nextDisputeId}`}
+                className="inline-flex items-center gap-2 rounded-full bg-accent px-8 py-3 text-base font-semibold text-white transition-all hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Next case &rarr;
+              </a>
+              <p className="text-xs text-muted mt-2">
+                Keep judging
+              </p>
             </div>
           )}
         </>

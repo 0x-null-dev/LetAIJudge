@@ -24,6 +24,8 @@ async function setup() {
       jury_id TEXT NOT NULL DEFAULT 'judge-diana',
       verdict_text TEXT,
       verdict_winner TEXT,
+      person_a_teaser TEXT,
+      person_b_teaser TEXT,
       status TEXT NOT NULL DEFAULT 'pending',
       challenge_token TEXT NOT NULL,
       lock_holder TEXT,

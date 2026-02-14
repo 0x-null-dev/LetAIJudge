@@ -25,10 +25,12 @@ ${dispute.person_b_name?.toUpperCase()}'S ARGUMENT:
 
 Read both arguments carefully. Deliver your verdict. You MUST pick a side — state clearly who you're siding with using their actual name. Only rule it a draw if both arguments are genuinely equal in merit.
 
-After your verdict text, on a NEW LINE, write exactly one of these:
+After your verdict text, add these on NEW LINES in this exact format:
 WINNER: person_a
-WINNER: person_b
-WINNER: neutral`;
+TEASER_A: [One punchy sentence that captures ${dispute.person_a_name}'s side in a dramatic, curiosity-inducing way — like a headline that makes people desperate to know who won]
+TEASER_B: [Same for ${dispute.person_b_name}'s side]
+
+The teasers should NOT be neutral summaries. They should be dramatic, slightly biased restatements that create tension when read side-by-side. Think tabloid headlines, not Wikipedia.`;
 
   const { text } = await generateText({
     model: openai("gpt-4"),
@@ -38,17 +40,35 @@ WINNER: neutral`;
     temperature: 0.8,
   });
 
-  // Parse winner from the last line
+  // Parse structured output from the end
   let verdictWinner = "neutral";
   let verdictText = text;
+  let personATeaser: string | null = null;
+  let personBTeaser: string | null = null;
 
-  const winnerMatch = text.match(/WINNER:\s*(person_a|person_b|neutral)\s*$/m);
+  const winnerMatch = text.match(/WINNER:\s*(person_a|person_b|neutral)/m);
   if (winnerMatch) {
     verdictWinner = winnerMatch[1];
-    verdictText = text.replace(/\nWINNER:\s*(person_a|person_b|neutral)\s*$/m, "").trim();
   }
 
-  await saveVerdict(disputeId, verdictText, verdictWinner);
+  const teaserAMatch = text.match(/TEASER_A:\s*(.+)/m);
+  if (teaserAMatch) {
+    personATeaser = teaserAMatch[1].trim();
+  }
+
+  const teaserBMatch = text.match(/TEASER_B:\s*(.+)/m);
+  if (teaserBMatch) {
+    personBTeaser = teaserBMatch[1].trim();
+  }
+
+  // Strip all metadata lines from the verdict text
+  verdictText = text
+    .replace(/\nWINNER:\s*.+/m, "")
+    .replace(/\nTEASER_A:\s*.+/m, "")
+    .replace(/\nTEASER_B:\s*.+/m, "")
+    .trim();
+
+  await saveVerdict(disputeId, verdictText, verdictWinner, personATeaser, personBTeaser);
 
   return { verdictText, verdictWinner };
 }

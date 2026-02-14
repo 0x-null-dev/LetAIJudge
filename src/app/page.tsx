@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
+import FeedSection from "./FeedSection";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center gap-8 py-12 text-center">
+    <div className="flex flex-col items-center gap-8 py-12">
       <div className="flex flex-col gap-3">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
           Both sides testify.
@@ -18,20 +19,12 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Link
-          href="/create"
-          className="rounded-full bg-accent px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-accent-hover"
-        >
-          Got an argument?
-        </Link>
-        <Link
-          href="/create?mode=solo"
-          className="rounded-full border-2 border-foreground px-8 py-3 text-lg font-semibold text-foreground transition-colors hover:bg-foreground hover:text-white"
-        >
-          Can&apos;t decide?
-        </Link>
-      </div>
+      <Link
+        href="/create"
+        className="rounded-full bg-accent px-8 py-3 text-lg font-semibold text-white transition-colors hover:bg-accent-hover"
+      >
+        Start a dispute
+      </Link>
 
       {/* Comic strip "How it works" — full width, breaks out of max-w-2xl container */}
       <div className="mt-4 w-[calc(100vw-2rem)] max-w-5xl">
@@ -122,6 +115,11 @@ export default function Home() {
           </div>
         </div>
 
+      </div>
+
+      {/* Live feed — disputes people can vote on */}
+      <div className="w-[calc(100vw-2rem)] max-w-3xl mt-4">
+        <FeedSection />
       </div>
     </div>
   );

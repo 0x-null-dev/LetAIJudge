@@ -119,15 +119,66 @@ export async function submitChallenge(
 export async function saveVerdict(
   disputeId: string,
   verdictText: string,
-  verdictWinner: string
+  verdictWinner: string,
+  personATeaser?: string | null,
+  personBTeaser?: string | null
 ): Promise<void> {
   await query(
     `UPDATE disputes
      SET verdict_text = $1,
          verdict_winner = $2,
+         person_a_teaser = $3,
+         person_b_teaser = $4,
          status = 'complete',
          completed_at = NOW()
-     WHERE id = $3`,
-    [verdictText, verdictWinner, disputeId]
+     WHERE id = $5`,
+    [verdictText, verdictWinner, personATeaser || null, personBTeaser || null, disputeId]
   );
+}
+
+export interface FeedDispute {
+  id: string;
+  topic: string;
+  person_a_name: string;
+  person_b_name: string;
+  person_a_teaser: string | null;
+  person_b_teaser: string | null;
+  completed_at: string;
+  votes_a: number;
+  votes_b: number;
+  vote_count: number;
+}
+
+export async function getCompletedDisputes(options: {
+  sort: "newest" | "most_votes";
+  limit: number;
+  offset: number;
+}): Promise<{ disputes: FeedDispute[]; total: number }> {
+  const orderBy =
+    options.sort === "most_votes"
+      ? "vote_count DESC, d.completed_at DESC"
+      : "d.completed_at DESC";
+
+  const disputes = await query<FeedDispute>(
+    `SELECT d.id, d.topic, d.person_a_name, d.person_b_name, d.person_a_teaser, d.person_b_teaser, d.completed_at,
+            COUNT(v.id) FILTER (WHERE v.choice = 'person_a')::int AS votes_a,
+            COUNT(v.id) FILTER (WHERE v.choice = 'person_b')::int AS votes_b,
+            COUNT(v.id)::int AS vote_count
+     FROM disputes d
+     LEFT JOIN votes v ON v.dispute_id = d.id
+     WHERE d.status = 'complete'
+     GROUP BY d.id
+     ORDER BY ${orderBy}
+     LIMIT $1 OFFSET $2`,
+    [options.limit, options.offset]
+  );
+
+  const countResult = await query<{ count: number }>(
+    "SELECT COUNT(*)::int AS count FROM disputes WHERE status = 'complete'"
+  );
+
+  return {
+    disputes,
+    total: countResult[0]?.count || 0,
+  };
 }

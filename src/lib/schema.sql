@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS disputes (
   jury_id TEXT NOT NULL DEFAULT 'judge-diana',
   verdict_text TEXT,
   verdict_winner TEXT, -- 'person_a', 'person_b', or 'neutral'
+  person_a_teaser TEXT,
+  person_b_teaser TEXT,
   status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'complete', 'incomplete', 'reported'
   challenge_token TEXT NOT NULL,
   lock_holder TEXT,
