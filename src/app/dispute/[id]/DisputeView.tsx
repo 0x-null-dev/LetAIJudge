@@ -46,6 +46,7 @@ export default function DisputeView({
   const [voting, setVoting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [nextDisputeId, setNextDisputeId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const participant = localStorage.getItem(`participant-${disputeId}`);
@@ -375,6 +376,54 @@ export default function DisputeView({
               </div>
             </div>
           )}
+
+          {/* Share button */}
+          <div className="flex justify-center gap-3 animate-slide-up">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/dispute/${disputeId}`;
+                navigator.clipboard.writeText(url).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                });
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-card-border bg-card-bg px-5 py-2 text-sm font-medium transition-all hover:border-accent hover:text-accent"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.04a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.51 8.88"
+                />
+              </svg>
+              {copied ? "Copied!" : "Share this case"}
+            </button>
+            <a
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                isSolo
+                  ? `Am I The Asshole? "${topic}" — Vote and see the AI verdict!`
+                  : `${personAName} vs ${personBName}: "${topic}" — Who's right? Vote now!`
+              )}&url=${encodeURIComponent(
+                typeof window !== "undefined"
+                  ? `${window.location.origin}/dispute/${disputeId}`
+                  : `/dispute/${disputeId}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-card-border bg-card-bg px-5 py-2 text-sm font-medium transition-all hover:border-accent hover:text-accent"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Post on X
+            </a>
+          </div>
 
           {/* Next case — binge loop */}
           {nextDisputeId && (

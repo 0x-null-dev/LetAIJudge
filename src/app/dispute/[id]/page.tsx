@@ -1,7 +1,52 @@
+import type { Metadata } from "next";
 import { getDispute } from "@/lib/disputes";
 import { getJury } from "@/lib/jury";
 import { notFound } from "next/navigation";
 import DisputeView from "./DisputeView";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const dispute = await getDispute(id);
+
+  if (!dispute) {
+    return { title: "Dispute not found" };
+  }
+
+  const isSolo = dispute.type === "solo";
+  const title = isSolo
+    ? `${dispute.person_a_name}'s story — Am I The Asshole?`
+    : `${dispute.person_a_name} vs ${dispute.person_b_name} — LetAIJudge`;
+  const description = `"${dispute.topic}" — Vote and see the AI jury's verdict.`;
+  const ogImageUrl = `/dispute/${id}/og`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: dispute.topic,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImageUrl],
+    },
+  };
+}
 
 export default async function DisputePage({
   params,
