@@ -1,6 +1,6 @@
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { getJury, getAITASystemPrompt } from "./jury";
+import { getJury } from "@/judges";
 import { getDispute, saveVerdict } from "./disputes";
 
 export async function generateVerdict(disputeId: string): Promise<{
@@ -104,7 +104,7 @@ The teaser should be dramatic and curiosity-inducing. Think tabloid headline, no
 
   const { text } = await generateText({
     model: openai("gpt-4"),
-    system: getAITASystemPrompt(jury),
+    system: jury.aitaSystemPrompt,
     prompt,
     maxOutputTokens: 1000,
     temperature: 0.8,

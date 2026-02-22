@@ -21,7 +21,7 @@ async function setup() {
       person_a_argument TEXT NOT NULL,
       person_b_name TEXT,
       person_b_argument TEXT,
-      jury_id TEXT NOT NULL DEFAULT 'judge-diana',
+      jury_id TEXT NOT NULL DEFAULT 'axiom-9',
       verdict_text TEXT,
       verdict_winner TEXT,
       person_a_teaser TEXT,

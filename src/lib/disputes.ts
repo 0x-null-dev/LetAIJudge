@@ -1,6 +1,6 @@
 import { query } from "./db";
 import { nanoid } from "nanoid";
-import { getRandomJury } from "./jury";
+import { getRandomJury } from "@/judges";
 
 export interface Dispute {
   id: string;

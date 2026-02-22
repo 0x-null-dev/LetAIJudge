@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getDispute } from "@/lib/disputes";
-import { getJury } from "@/lib/jury";
+import { getJury } from "@/judges";
 import { notFound } from "next/navigation";
 import DisputeView from "./DisputeView";
 
