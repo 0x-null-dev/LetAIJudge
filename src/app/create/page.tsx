@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import AxiomDeliberation from "@/components/AxiomDeliberation";
 
 export default function CreateDisputePage() {
   return (
@@ -70,7 +71,6 @@ function CreateDispute() {
       });
     } catch {
       setError("Failed to create dispute. Please try again.");
-    } finally {
       setLoading(false);
     }
   }
@@ -80,6 +80,11 @@ function CreateDispute() {
     await navigator.clipboard.writeText(result.challengeUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  // AITA loading — show AXIOM-9 deliberation terminal
+  if (loading && isSolo) {
+    return <AxiomDeliberation mode="solo" />;
   }
 
   // Success state — show share link (disputes only, AITA redirects)
