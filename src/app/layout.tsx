@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ThemeToggle from "@/components/ThemeToggle";
+import MobileNav from "@/components/MobileNav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -50,17 +51,24 @@ export default function RootLayout({
             <div className="flex items-center gap-2">
               <a
                 href="/create"
-                className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+                className="hidden md:inline-flex rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
               >
                 File dispute
               </a>
               <a
                 href="/create?mode=solo"
-                className="rounded-lg border border-card-border px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:border-accent hover:text-accent"
+                className="hidden md:inline-flex rounded-lg border border-card-border px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:border-accent hover:text-accent"
               >
                 AITA?
               </a>
+              <a
+                href="/docs"
+                className="hidden md:inline-flex rounded-lg border border-card-border px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:border-accent hover:text-accent"
+              >
+                Docs
+              </a>
               <ThemeToggle />
+              <MobileNav />
             </div>
           </div>
         </header>
