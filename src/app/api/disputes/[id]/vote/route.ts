@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDispute } from "@/lib/disputes";
-import { castVote, getVoteCounts, hasVoted } from "@/lib/votes";
+import { castVote, getVoteCountsDetailed, hasVoted } from "@/lib/votes";
 
 function getClientIp(request: NextRequest): string | null {
   return (
@@ -43,7 +43,7 @@ export async function POST(
 
     if (!result.success) {
       // Already voted — return results anyway
-      const counts = await getVoteCounts(id);
+      const counts = await getVoteCountsDetailed(id);
       return NextResponse.json(
         {
           error: "You've already voted on this dispute",
@@ -59,7 +59,7 @@ export async function POST(
     }
 
     // Vote successful — return verdict + counts
-    const counts = await getVoteCounts(id);
+    const counts = await getVoteCountsDetailed(id);
     return NextResponse.json({
       success: true,
       counts,
@@ -92,7 +92,7 @@ export async function GET(
 
     const voterIp = getClientIp(request);
     const voteStatus = await hasVoted(id, voterIp);
-    const counts = await getVoteCounts(id);
+    const counts = await getVoteCountsDetailed(id);
 
     if (voteStatus.voted) {
       return NextResponse.json({

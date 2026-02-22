@@ -14,12 +14,15 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.29",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "ai": "^6.0.86",
+    "mcp-handler": "^1.0.7",
     "nanoid": "^5.1.6",
     "next": "16.1.6",
     "pg": "^8.18.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

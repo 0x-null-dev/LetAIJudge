@@ -172,11 +172,20 @@ export async function getCompletedDisputes(options: {
   sort: "newest" | "most_votes";
   limit: number;
   offset: number;
+  type?: "dispute" | "solo" | "all";
 }): Promise<{ disputes: FeedDispute[]; total: number }> {
   const orderBy =
     options.sort === "most_votes"
       ? "vote_count DESC, d.completed_at DESC"
       : "d.completed_at DESC";
+
+  const typeFilter = options.type && options.type !== "all";
+  const whereClause = typeFilter
+    ? "WHERE d.status = 'complete' AND d.type = $3"
+    : "WHERE d.status = 'complete'";
+
+  const params: (string | number)[] = [options.limit, options.offset];
+  if (typeFilter) params.push(options.type!);
 
   const disputes = await query<FeedDispute>(
     `SELECT d.id, d.type, d.topic, d.person_a_name, d.person_b_name, d.person_a_teaser, d.person_b_teaser, d.completed_at,
@@ -185,15 +194,23 @@ export async function getCompletedDisputes(options: {
             COUNT(v.id)::int AS vote_count
      FROM disputes d
      LEFT JOIN votes v ON v.dispute_id = d.id
-     WHERE d.status = 'complete'
+     ${whereClause}
      GROUP BY d.id
      ORDER BY ${orderBy}
      LIMIT $1 OFFSET $2`,
-    [options.limit, options.offset]
+    params
   );
 
+  const countParams: (string | number)[] = [];
+  let countWhere = "WHERE status = 'complete'";
+  if (typeFilter) {
+    countWhere += " AND type = $1";
+    countParams.push(options.type!);
+  }
+
   const countResult = await query<{ count: number }>(
-    "SELECT COUNT(*)::int AS count FROM disputes WHERE status = 'complete'"
+    `SELECT COUNT(*)::int AS count FROM disputes ${countWhere}`,
+    countParams
   );
 
   return {

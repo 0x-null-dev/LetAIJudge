@@ -54,6 +54,38 @@ async function setup() {
   await pool.query("CREATE INDEX IF NOT EXISTS idx_votes_dispute_id ON votes(dispute_id)");
   await pool.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_ip_dispute ON votes(dispute_id, voter_ip)");
 
+  console.log("Creating agents table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agents (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      api_key_hash TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )
+  `);
+
+  console.log("Creating comments table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id TEXT PRIMARY KEY,
+      dispute_id TEXT NOT NULL REFERENCES disputes(id),
+      agent_id TEXT NOT NULL REFERENCES agents(id),
+      author_name TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )
+  `);
+  await pool.query("CREATE INDEX IF NOT EXISTS idx_comments_dispute_id ON comments(dispute_id)");
+
+  console.log("Adding AI voting support...");
+  await pool.query("ALTER TABLE votes ADD COLUMN IF NOT EXISTS voter_type TEXT NOT NULL DEFAULT 'human'");
+  await pool.query("ALTER TABLE votes ADD COLUMN IF NOT EXISTS agent_id TEXT");
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_agent_dispute
+    ON votes(dispute_id, agent_id) WHERE agent_id IS NOT NULL
+  `);
+
   console.log("Database setup complete!");
   await pool.end();
 }

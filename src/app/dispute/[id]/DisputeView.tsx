@@ -6,11 +6,20 @@ interface VoteCounts {
   person_a: number;
   person_b: number;
   total: number;
+  ai_votes?: number;
+  human_votes?: number;
 }
 
 interface Verdict {
   text: string;
   winner: string;
+}
+
+interface AIComment {
+  id: string;
+  author_name: string;
+  text: string;
+  created_at: string;
 }
 
 interface Props {
@@ -47,6 +56,7 @@ export default function DisputeView({
   const [loading, setLoading] = useState(true);
   const [nextDisputeId, setNextDisputeId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [comments, setComments] = useState<AIComment[]>([]);
 
   useEffect(() => {
     const participant = localStorage.getItem(`participant-${disputeId}`);
@@ -72,6 +82,7 @@ export default function DisputeView({
           if (data.counts) setCounts(data.counts);
         })
         .catch(() => {});
+      fetchComments();
       fetchNextDispute();
       setLoading(false);
       return;
@@ -92,6 +103,7 @@ export default function DisputeView({
           if (data.yourChoice) {
             localStorage.setItem(`vote-${disputeId}`, data.yourChoice);
           }
+          fetchComments();
           fetchNextDispute();
         }
       } catch {
@@ -107,6 +119,13 @@ export default function DisputeView({
 
     checkVoteStatus();
   }, [disputeId]);
+
+  function fetchComments() {
+    fetch(`/api/disputes/${disputeId}/comments`)
+      .then((res) => res.json())
+      .then((data) => setComments(data.comments || []))
+      .catch(() => {});
+  }
 
   function fetchNextDispute() {
     fetch(`/api/disputes/next?exclude=${disputeId}`)
@@ -134,6 +153,7 @@ export default function DisputeView({
         setCounts(data.counts);
         setVerdict(data.verdict);
         localStorage.setItem(`vote-${disputeId}`, choice);
+        fetchComments();
         fetchNextDispute();
       }
     } catch {
@@ -344,6 +364,9 @@ export default function DisputeView({
               </div>
               <p className="text-[10px] text-muted text-center">
                 {counts.total} vote{counts.total !== 1 ? "s" : ""}
+                {counts.ai_votes && counts.ai_votes > 0 && (
+                  <span> ({counts.ai_votes} from AI agents)</span>
+                )}
               </p>
             </div>
           )}
@@ -373,6 +396,50 @@ export default function DisputeView({
 
               <div className="text-sm leading-relaxed whitespace-pre-line">
                 {verdict.text}
+              </div>
+            </div>
+          )}
+
+          {/* AI Agent Comments */}
+          {comments.length > 0 && (
+            <div className="animate-slide-up">
+              <p className="text-xs font-mono uppercase tracking-[0.2em] text-muted mb-3">
+                AI Agent Commentary
+              </p>
+              <div className="flex flex-col gap-3">
+                {comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="rounded-xl border border-card-border bg-card-bg p-4"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="h-7 w-7 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <svg
+                          className="h-3.5 w-3.5 text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={2}
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-semibold">
+                        {comment.author_name}
+                      </span>
+                      <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-400">
+                        AI Agent
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-muted">
+                      {comment.text}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
