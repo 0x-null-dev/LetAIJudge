@@ -20,7 +20,8 @@ export async function castVote(
   choice: "person_a" | "person_b",
   voterIp: string | null,
   voterType: "human" | "ai" = "human",
-  agentId: string | null = null
+  agentId: string | null = null,
+  voterFingerprint: string | null = null
 ): Promise<{ success: boolean; reason?: string }> {
   // AI agent deduplication: check by agent_id
   if (voterType === "ai" && agentId) {
@@ -33,22 +34,47 @@ export async function castVote(
     }
   }
 
-  // Human deduplication: check by IP
-  if (voterType === "human" && voterIp) {
-    const existing = await query(
-      "SELECT id FROM votes WHERE dispute_id = $1 AND voter_ip = $2",
-      [disputeId, voterIp]
-    );
-    if (existing.length > 0) {
-      return { success: false, reason: "already_voted" };
+  // Human deduplication: check by IP OR fingerprint
+  if (voterType === "human") {
+    const conditions: string[] = [];
+    const params: (string | null)[] = [disputeId];
+    let idx = 2;
+
+    if (voterIp) {
+      conditions.push(`voter_ip = $${idx}`);
+      params.push(voterIp);
+      idx++;
+    }
+    if (voterFingerprint) {
+      conditions.push(`voter_fingerprint = $${idx}`);
+      params.push(voterFingerprint);
+      idx++;
+    }
+
+    if (conditions.length > 0) {
+      const existing = await query(
+        `SELECT id FROM votes WHERE dispute_id = $1 AND (${conditions.join(" OR ")})`,
+        params
+      );
+      if (existing.length > 0) {
+        return { success: false, reason: "already_voted" };
+      }
     }
   }
 
   const id = nanoid(16);
-  await query(
-    "INSERT INTO votes (id, dispute_id, choice, voter_ip, voter_type, agent_id) VALUES ($1, $2, $3, $4, $5, $6)",
-    [id, disputeId, choice, voterIp, voterType, agentId]
-  );
+  try {
+    await query(
+      "INSERT INTO votes (id, dispute_id, choice, voter_ip, voter_type, agent_id, voter_fingerprint) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      [id, disputeId, choice, voterIp, voterType, agentId, voterFingerprint]
+    );
+  } catch (err: unknown) {
+    // UNIQUE constraint backstop for race conditions
+    if (err instanceof Error && err.message.includes("unique")) {
+      return { success: false, reason: "already_voted" };
+    }
+    throw err;
+  }
 
   return { success: true };
 }
@@ -96,13 +122,29 @@ export async function getVoteCountsDetailed(disputeId: string): Promise<Detailed
 
 export async function hasVoted(
   disputeId: string,
-  voterIp: string | null
+  voterIp: string | null,
+  voterFingerprint: string | null = null
 ): Promise<{ voted: boolean; choice?: string }> {
-  if (!voterIp) return { voted: false };
+  const conditions: string[] = [];
+  const params: (string | null)[] = [disputeId];
+  let idx = 2;
+
+  if (voterIp) {
+    conditions.push(`voter_ip = $${idx}`);
+    params.push(voterIp);
+    idx++;
+  }
+  if (voterFingerprint) {
+    conditions.push(`voter_fingerprint = $${idx}`);
+    params.push(voterFingerprint);
+    idx++;
+  }
+
+  if (conditions.length === 0) return { voted: false };
 
   const rows = await query<{ choice: string }>(
-    "SELECT choice FROM votes WHERE dispute_id = $1 AND voter_ip = $2",
-    [disputeId, voterIp]
+    `SELECT choice FROM votes WHERE dispute_id = $1 AND (${conditions.join(" OR ")})`,
+    params
   );
 
   if (rows.length > 0) {

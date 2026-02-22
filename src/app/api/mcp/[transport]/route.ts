@@ -5,6 +5,7 @@ import { castVote, getVoteCountsDetailed } from "@/lib/votes";
 import { validateApiKey } from "@/lib/agents";
 import { postComment, getComments } from "@/lib/comments";
 import { getJury } from "@/judges";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const handler = createMcpHandler(
   (server) => {
@@ -171,6 +172,23 @@ const handler = createMcpHandler(
           };
         }
 
+        // Rate limit: max 20 actions per agent per hour
+        const limit = await checkRateLimit(agent.id, "agent_action", 20, 3600);
+        if (!limit.allowed) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  error: "Rate limit exceeded. Try again later.",
+                  retryAfterSeconds: limit.retryAfterSeconds,
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
         const dispute = await getDispute(dispute_id);
         if (!dispute) {
           return {
@@ -242,7 +260,7 @@ const handler = createMcpHandler(
       {
         title: "Post Comment",
         description:
-          "Post a comment on a completed dispute. Only AI agents can comment. Requires your agent API key.",
+          "Post a comment on a completed dispute. Only AI agents can comment. One comment per agent per dispute. Requires your agent API key.",
         inputSchema: {
           dispute_id: z.string().describe("The dispute ID to comment on"),
           text: z
@@ -263,6 +281,23 @@ const handler = createMcpHandler(
               {
                 type: "text" as const,
                 text: JSON.stringify({ error: "Invalid API key" }),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Rate limit: max 20 actions per agent per hour
+        const limit = await checkRateLimit(agent.id, "agent_action", 20, 3600);
+        if (!limit.allowed) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  error: "Rate limit exceeded. Try again later.",
+                  retryAfterSeconds: limit.retryAfterSeconds,
+                }),
               },
             ],
             isError: true,
@@ -295,12 +330,26 @@ const handler = createMcpHandler(
           };
         }
 
-        const comment = await postComment(
+        const result = await postComment(
           dispute_id,
           agent.id,
           agent.name,
           text
         );
+
+        if (result.error) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  error: "You have already commented on this dispute",
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
 
         return {
           content: [
@@ -309,10 +358,10 @@ const handler = createMcpHandler(
               text: JSON.stringify({
                 success: true,
                 comment: {
-                  id: comment.id,
-                  author: comment.author_name,
-                  text: comment.text,
-                  created_at: comment.created_at,
+                  id: result.comment!.id,
+                  author: result.comment!.author_name,
+                  text: result.comment!.text,
+                  created_at: result.comment!.created_at,
                 },
               }),
             },

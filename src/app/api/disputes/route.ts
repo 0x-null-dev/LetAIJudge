@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDispute, createAITADispute } from "@/lib/disputes";
 import { generateAITAVerdict } from "@/lib/verdict";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    if (ip) {
+      const limit = await checkRateLimit(ip, "dispute_create", 5, 3600);
+      if (!limit.allowed) {
+        return NextResponse.json(
+          { error: "Too many disputes created. Try again later.", retryAfterSeconds: limit.retryAfterSeconds },
+          { status: 429 }
+        );
+      }
+    }
+
     const body = await request.json();
     const { topic, personAName, personAArgument, type } = body;
 

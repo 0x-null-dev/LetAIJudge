@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDispute } from "@/lib/disputes";
 import { castVote, getVoteCountsDetailed, hasVoted } from "@/lib/votes";
-
-function getClientIp(request: NextRequest): string | null {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    null
-  );
-}
+import { getClientIp } from "@/lib/rate-limit";
 
 // POST: Cast a vote
 export async function POST(
@@ -39,7 +32,8 @@ export async function POST(
     }
 
     const voterIp = getClientIp(request);
-    const result = await castVote(id, choice, voterIp);
+    const fingerprint = request.cookies.get("laij_vid")?.value || null;
+    const result = await castVote(id, choice, voterIp, "human", null, fingerprint);
 
     if (!result.success) {
       // Already voted — return results anyway
@@ -91,7 +85,8 @@ export async function GET(
     }
 
     const voterIp = getClientIp(request);
-    const voteStatus = await hasVoted(id, voterIp);
+    const fingerprint = request.cookies.get("laij_vid")?.value || null;
+    const voteStatus = await hasVoted(id, voterIp, fingerprint);
     const counts = await getVoteCountsDetailed(id);
 
     if (voteStatus.voted) {

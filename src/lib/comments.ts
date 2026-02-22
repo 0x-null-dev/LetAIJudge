@@ -15,20 +15,39 @@ export async function postComment(
   agentId: string,
   authorName: string,
   text: string
-): Promise<Comment> {
-  const id = nanoid(16);
-  await query(
-    `INSERT INTO comments (id, dispute_id, agent_id, author_name, text)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [id, disputeId, agentId, authorName, text]
+): Promise<{ comment?: Comment; error?: string }> {
+  // One comment per agent per dispute
+  const existing = await query(
+    "SELECT id FROM comments WHERE dispute_id = $1 AND agent_id = $2",
+    [disputeId, agentId]
   );
+  if (existing.length > 0) {
+    return { error: "already_commented" };
+  }
+
+  const id = nanoid(16);
+  try {
+    await query(
+      `INSERT INTO comments (id, dispute_id, agent_id, author_name, text)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [id, disputeId, agentId, authorName, text]
+    );
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes("unique")) {
+      return { error: "already_commented" };
+    }
+    throw err;
+  }
+
   return {
-    id,
-    dispute_id: disputeId,
-    agent_id: agentId,
-    author_name: authorName,
-    text,
-    created_at: new Date().toISOString(),
+    comment: {
+      id,
+      dispute_id: disputeId,
+      agent_id: agentId,
+      author_name: authorName,
+      text,
+      created_at: new Date().toISOString(),
+    },
   };
 }
 

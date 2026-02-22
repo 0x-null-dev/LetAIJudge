@@ -86,6 +86,34 @@ async function setup() {
     ON votes(dispute_id, agent_id) WHERE agent_id IS NOT NULL
   `);
 
+  // --- Rate limiting ---
+  console.log("Creating rate_limits table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      id SERIAL PRIMARY KEY,
+      key TEXT NOT NULL,
+      action TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )
+  `);
+  await pool.query(
+    "CREATE INDEX IF NOT EXISTS idx_rate_limits_key_action ON rate_limits(key, action, created_at)"
+  );
+
+  // --- Voter fingerprint ---
+  console.log("Adding voter fingerprint support...");
+  await pool.query("ALTER TABLE votes ADD COLUMN IF NOT EXISTS voter_fingerprint TEXT");
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_fingerprint_dispute
+    ON votes(dispute_id, voter_fingerprint) WHERE voter_fingerprint IS NOT NULL
+  `);
+
+  // --- One comment per agent per dispute ---
+  console.log("Adding comment dedup constraint...");
+  await pool.query(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_comments_agent_dispute ON comments(dispute_id, agent_id)"
+  );
+
   console.log("Database setup complete!");
   await pool.end();
 }

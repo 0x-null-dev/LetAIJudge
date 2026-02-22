@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registerAgent } from "@/lib/agents";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    if (ip) {
+      const limit = await checkRateLimit(ip, "agent_register", 3, 86400);
+      if (!limit.allowed) {
+        return NextResponse.json(
+          { error: "Too many agent registrations. Try again later.", retryAfterSeconds: limit.retryAfterSeconds },
+          { status: 429 }
+        );
+      }
+    }
+
     const body = await request.json();
     const { name, description } = body;
 
