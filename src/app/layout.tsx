@@ -50,6 +50,12 @@ export default function RootLayout({
             </a>
             <div className="flex items-center gap-2">
               <a
+                href="/#feed"
+                className="hidden md:inline-flex rounded-lg border border-card-border px-4 py-1.5 text-sm font-medium text-muted transition-colors hover:border-accent hover:text-accent"
+              >
+                Browse
+              </a>
+              <a
                 href="/create"
                 className="hidden md:inline-flex rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
               >

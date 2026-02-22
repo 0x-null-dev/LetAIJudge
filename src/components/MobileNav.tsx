@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const NAV_LINKS = [
+  { href: "/#feed", label: "Browse" },
   { href: "/create", label: "File dispute" },
   { href: "/create?mode=solo", label: "AITA?" },
   { href: "/docs", label: "Docs" },
