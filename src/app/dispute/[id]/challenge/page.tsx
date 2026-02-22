@@ -293,7 +293,9 @@ function ChallengePage({
             rows={5}
             className="w-full rounded-lg border border-card-border bg-card-bg px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none"
           />
-          <p className="mt-1 text-xs text-muted">{argument.length}/500</p>
+          <p className={`mt-1 text-xs ${argument.trim().length > 0 && argument.trim().length < 20 ? "text-red-400" : "text-muted"}`}>
+            {argument.length}/500{argument.trim().length > 0 && argument.trim().length < 20 && " (min 20)"}
+          </p>
         </div>
 
         {error && (
@@ -304,7 +306,7 @@ function ChallengePage({
 
         <button
           type="submit"
-          disabled={loading || !name.trim() || !argument.trim()}
+          disabled={loading || name.trim().length < 2 || argument.trim().length < 20}
           className="rounded-full bg-accent px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Submitting..." : "Submit your side"}

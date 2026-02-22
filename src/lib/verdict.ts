@@ -25,6 +25,8 @@ ${dispute.person_b_name?.toUpperCase()}'S ARGUMENT:
 
 Read both arguments carefully. Deliver your verdict. You MUST pick a side — state clearly who you're siding with using their actual name. Only rule it a draw if both arguments are genuinely equal in merit.
 
+If either argument is gibberish, empty, nonsensical, or clearly not a real dispute, explain why you cannot deliver a proper verdict, then output WINNER: invalid on a new line.
+
 After your verdict text, add these on NEW LINES in this exact format:
 WINNER: person_a
 TEASER_A: [One punchy sentence that captures ${dispute.person_a_name}'s side in a dramatic, curiosity-inducing way — like a headline that makes people desperate to know who won]
@@ -46,7 +48,7 @@ The teasers should NOT be neutral summaries. They should be dramatic, slightly b
   let personATeaser: string | null = null;
   let personBTeaser: string | null = null;
 
-  const winnerMatch = text.match(/WINNER:\s*(person_a|person_b|neutral)/m);
+  const winnerMatch = text.match(/WINNER:\s*(person_a|person_b|neutral|invalid)/m);
   if (winnerMatch) {
     verdictWinner = winnerMatch[1];
   }
@@ -68,7 +70,8 @@ The teasers should NOT be neutral summaries. They should be dramatic, slightly b
     .replace(/\nTEASER_B:\s*.+/m, "")
     .trim();
 
-  await saveVerdict(disputeId, verdictText, verdictWinner, personATeaser, personBTeaser);
+  const status = verdictWinner === "invalid" ? "rejected" : "complete";
+  await saveVerdict(disputeId, verdictText, verdictWinner, personATeaser, personBTeaser, status);
 
   return { verdictText, verdictWinner };
 }
@@ -92,6 +95,8 @@ ${dispute.person_a_name.toUpperCase()}'S STORY:
 
 Read the story carefully. Deliver your verdict: Is ${dispute.person_a_name} the asshole, or not? You MUST pick one — YTA (You're The Asshole) or NTA (Not The Asshole). No middle ground.
 
+If the story is gibberish, empty, nonsensical, or clearly not a real situation, explain why you cannot deliver a proper verdict, then output WINNER: invalid on a new line.
+
 After your verdict text, add these on NEW LINES in this exact format:
 WINNER: person_a
 TEASER: [One punchy sentence that captures the drama of this story — like a headline that makes people desperate to find out the verdict]
@@ -114,7 +119,7 @@ The teaser should be dramatic and curiosity-inducing. Think tabloid headline, no
   let verdictText = text;
   let teaser: string | null = null;
 
-  const winnerMatch = text.match(/WINNER:\s*(person_a|person_b)/m);
+  const winnerMatch = text.match(/WINNER:\s*(person_a|person_b|invalid)/m);
   if (winnerMatch) {
     verdictWinner = winnerMatch[1];
   }
@@ -129,8 +134,9 @@ The teaser should be dramatic and curiosity-inducing. Think tabloid headline, no
     .replace(/\nTEASER:\s*.+/m, "")
     .trim();
 
+  const status = verdictWinner === "invalid" ? "rejected" : "complete";
   // Store teaser in person_a_teaser (the single teaser for the story)
-  await saveVerdict(disputeId, verdictText, verdictWinner, teaser, null);
+  await saveVerdict(disputeId, verdictText, verdictWinner, teaser, null, status);
 
   return { verdictText, verdictWinner };
 }

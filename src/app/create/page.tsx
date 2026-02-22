@@ -28,6 +28,8 @@ function CreateDispute() {
   const [copied, setCopied] = useState(false);
 
   const maxArgLength = isSolo ? 2000 : 500;
+  const minArgLength = 20;
+  const minTopicLength = 10;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -224,7 +226,9 @@ function CreateDispute() {
             required
             className="w-full rounded-lg border border-card-border bg-card-bg px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent"
           />
-          <p className="mt-1 text-xs text-muted">{topic.length}/300</p>
+          <p className={`mt-1 text-xs ${topic.trim().length > 0 && topic.trim().length < minTopicLength ? "text-red-400" : "text-muted"}`}>
+            {topic.length}/300{topic.trim().length > 0 && topic.trim().length < minTopicLength && ` (min ${minTopicLength})`}
+          </p>
         </div>
 
         <div>
@@ -248,8 +252,8 @@ function CreateDispute() {
             rows={isSolo ? 8 : 5}
             className="w-full rounded-lg border border-card-border bg-card-bg px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none"
           />
-          <p className="mt-1 text-xs text-muted">
-            {argument.length}/{maxArgLength}
+          <p className={`mt-1 text-xs ${argument.trim().length > 0 && argument.trim().length < minArgLength ? "text-red-400" : "text-muted"}`}>
+            {argument.length}/{maxArgLength}{argument.trim().length > 0 && argument.trim().length < minArgLength && ` (min ${minArgLength})`}
           </p>
         </div>
 
@@ -261,7 +265,7 @@ function CreateDispute() {
 
         <button
           type="submit"
-          disabled={loading || !name.trim() || !topic.trim() || !argument.trim()}
+          disabled={loading || name.trim().length < 2 || topic.trim().length < minTopicLength || argument.trim().length < minArgLength}
           className="rounded-full bg-accent px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading

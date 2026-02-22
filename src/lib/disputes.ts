@@ -139,7 +139,8 @@ export async function saveVerdict(
   verdictText: string,
   verdictWinner: string,
   personATeaser?: string | null,
-  personBTeaser?: string | null
+  personBTeaser?: string | null,
+  status: "complete" | "rejected" = "complete"
 ): Promise<void> {
   await query(
     `UPDATE disputes
@@ -147,10 +148,10 @@ export async function saveVerdict(
          verdict_winner = $2,
          person_a_teaser = $3,
          person_b_teaser = $4,
-         status = 'complete',
+         status = $5,
          completed_at = NOW()
-     WHERE id = $5`,
-    [verdictText, verdictWinner, personATeaser || null, personBTeaser || null, disputeId]
+     WHERE id = $6`,
+    [verdictText, verdictWinner, personATeaser || null, personBTeaser || null, status, disputeId]
   );
 }
 

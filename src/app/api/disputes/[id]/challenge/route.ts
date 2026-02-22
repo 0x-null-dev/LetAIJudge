@@ -24,16 +24,16 @@ export async function POST(
       );
     }
 
-    if (personBName.length > 50) {
+    if (personBName.trim().length < 2 || personBName.length > 50) {
       return NextResponse.json(
-        { error: "Name must be under 50 characters" },
+        { error: "Name must be between 2 and 50 characters" },
         { status: 400 }
       );
     }
 
-    if (personBArgument.length > 500) {
+    if (personBArgument.trim().length < 20 || personBArgument.length > 500) {
       return NextResponse.json(
-        { error: "Argument must be under 500 characters" },
+        { error: "Your argument must be between 20 and 500 characters" },
         { status: 400 }
       );
     }

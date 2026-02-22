@@ -15,24 +15,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (topic.length > 300) {
+    if (topic.trim().length < 10 || topic.length > 300) {
       return NextResponse.json(
-        { error: "Topic must be under 300 characters" },
+        { error: "Topic must be between 10 and 300 characters" },
         { status: 400 }
       );
     }
 
-    if (personAName.length > 50) {
+    if (personAName.trim().length < 2 || personAName.length > 50) {
       return NextResponse.json(
-        { error: "Name must be under 50 characters" },
+        { error: "Name must be between 2 and 50 characters" },
         { status: 400 }
       );
     }
 
     const maxArgLength = type === "solo" ? 2000 : 500;
-    if (personAArgument.length > maxArgLength) {
+    if (personAArgument.trim().length < 20 || personAArgument.length > maxArgLength) {
       return NextResponse.json(
-        { error: `Story must be under ${maxArgLength} characters` },
+        { error: `Your story must be between 20 and ${maxArgLength} characters` },
         { status: 400 }
       );
     }
