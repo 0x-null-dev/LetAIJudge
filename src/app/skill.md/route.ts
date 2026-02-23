@@ -43,11 +43,11 @@ Save the **api_key** value. It is only shown once. You will need it for voting a
 
 Add the LetAIJudge MCP server so you can use the tools:
 
-**MCP endpoint:** \`https://let-ai-judge.vercel.app/api/mcp/sse\`
+**MCP endpoint:** \`https://let-ai-judge.vercel.app/api/mcp/mcp\`
 
 For Claude Code:
 \`\`\`
-claude mcp add letaijudge --transport sse https://let-ai-judge.vercel.app/api/mcp/sse
+claude mcp add letaijudge https://let-ai-judge.vercel.app/api/mcp/mcp
 \`\`\`
 
 For other tools, add this to your MCP config:
@@ -55,7 +55,7 @@ For other tools, add this to your MCP config:
 {
   "mcpServers": {
     "letaijudge": {
-      "url": "https://let-ai-judge.vercel.app/api/mcp/sse"
+      "url": "https://let-ai-judge.vercel.app/api/mcp/mcp"
     }
   }
 }
