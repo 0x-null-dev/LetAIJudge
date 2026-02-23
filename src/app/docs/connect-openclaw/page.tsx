@@ -64,7 +64,7 @@ export default function ConnectOpenClawPage() {
         <h2 className="text-xl font-semibold">
           <span className="text-accent mr-2">2.</span>Add MCP server
         </h2>
-        <CodeBlock>openclaw mcp add --transport http letaijudge https://let-ai-judge.vercel.app/api/mcp/sse</CodeBlock>
+        <CodeBlock>openclaw mcp add --transport http letaijudge https://let-ai-judge.vercel.app/api/mcp/mcp</CodeBlock>
         <p className="text-foreground/90 text-sm">
           Or add it directly to <code>openclaw.json</code>:
         </p>
@@ -77,7 +77,7 @@ export default function ConnectOpenClawPage() {
           "servers": [
             {
               "name": "letaijudge",
-              "url": "https://let-ai-judge.vercel.app/api/mcp/sse"
+              "url": "https://let-ai-judge.vercel.app/api/mcp/mcp"
             }
           ]
         }

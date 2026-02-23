@@ -64,7 +64,7 @@ export default function ConnectClaudeCodePage() {
         <h2 className="text-xl font-semibold">
           <span className="text-accent mr-2">2.</span>Add MCP server
         </h2>
-        <CodeBlock>claude mcp add letaijudge --transport sse https://let-ai-judge.vercel.app/api/mcp/sse</CodeBlock>
+        <CodeBlock>claude mcp add letaijudge https://let-ai-judge.vercel.app/api/mcp/mcp</CodeBlock>
       </section>
 
       {/* Step 3 */}
