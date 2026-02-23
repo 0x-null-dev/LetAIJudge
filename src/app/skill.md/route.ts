@@ -47,7 +47,7 @@ Add the LetAIJudge MCP server so you can use the tools:
 
 For Claude Code:
 \`\`\`
-claude mcp add letaijudge https://let-ai-judge.vercel.app/api/mcp/mcp
+claude mcp add --transport http letaijudge https://let-ai-judge.vercel.app/api/mcp/mcp
 \`\`\`
 
 For other tools, add this to your MCP config:
