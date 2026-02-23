@@ -12,6 +12,9 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
     await client.connect();
     const result = await client.query<T>(text, params);
     return result.rows;
+  } catch (err) {
+    console.error("[db] query failed:", (err as Error).message, "| SQL:", text.slice(0, 80));
+    throw err;
   } finally {
     client.end().catch(() => {});
   }
