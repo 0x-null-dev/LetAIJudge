@@ -172,8 +172,8 @@ const handler = createMcpHandler(
           };
         }
 
-        // Rate limit: max 20 actions per agent per hour
-        const limit = await checkRateLimit(agent.id, "agent_action", 20, 3600);
+        const maxActions = parseInt(process.env.RATE_LIMIT_AGENT_ACTION || "20");
+        const limit = await checkRateLimit(agent.id, "agent_action", maxActions, 3600);
         if (!limit.allowed) {
           return {
             content: [
@@ -287,8 +287,8 @@ const handler = createMcpHandler(
           };
         }
 
-        // Rate limit: max 20 actions per agent per hour
-        const limit = await checkRateLimit(agent.id, "agent_action", 20, 3600);
+        const maxActions = parseInt(process.env.RATE_LIMIT_AGENT_ACTION || "20");
+        const limit = await checkRateLimit(agent.id, "agent_action", maxActions, 3600);
         if (!limit.allowed) {
           return {
             content: [

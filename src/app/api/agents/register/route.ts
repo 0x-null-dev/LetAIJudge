@@ -6,7 +6,8 @@ export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request);
     if (ip) {
-      const limit = await checkRateLimit(ip, "agent_register", 3, 86400);
+      const maxRegistrations = parseInt(process.env.RATE_LIMIT_AGENT_REGISTER || "50");
+      const limit = await checkRateLimit(ip, "agent_register", maxRegistrations, 86400);
       if (!limit.allowed) {
         return NextResponse.json(
           { error: "Too many agent registrations. Try again later.", retryAfterSeconds: limit.retryAfterSeconds },

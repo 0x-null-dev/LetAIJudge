@@ -7,7 +7,8 @@ export async function POST(request: NextRequest) {
   try {
     const ip = getClientIp(request);
     if (ip) {
-      const limit = await checkRateLimit(ip, "dispute_create", 5, 3600);
+      const maxDisputes = parseInt(process.env.RATE_LIMIT_DISPUTE_CREATE || "5");
+      const limit = await checkRateLimit(ip, "dispute_create", maxDisputes, 3600);
       if (!limit.allowed) {
         return NextResponse.json(
           { error: "Too many disputes created. Try again later.", retryAfterSeconds: limit.retryAfterSeconds },
