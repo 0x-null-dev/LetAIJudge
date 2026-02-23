@@ -32,6 +32,11 @@ interface Props {
   personBArgument: string;
   juryName: string;
   juryBio: string;
+  verdictText: string;
+  verdictWinner: string;
+  initialComments: AIComment[];
+  initialVoteCounts: VoteCounts | null;
+  nextDisputeId: string | null;
 }
 
 export default function DisputeView({
@@ -44,51 +49,40 @@ export default function DisputeView({
   personBArgument,
   juryName,
   juryBio,
+  verdictText,
+  verdictWinner,
+  initialComments,
+  initialVoteCounts,
+  nextDisputeId: initialNextDisputeId,
 }: Props) {
   const isSolo = type === "solo";
+
+  const serverVerdict: Verdict = { text: verdictText, winner: verdictWinner };
 
   const [revealed, setRevealed] = useState(false);
   const [isParticipant, setIsParticipant] = useState(false);
   const [yourChoice, setYourChoice] = useState<string | null>(null);
-  const [counts, setCounts] = useState<VoteCounts | null>(null);
-  const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const [counts, setCounts] = useState<VoteCounts | null>(initialVoteCounts);
+  const [verdict, setVerdict] = useState<Verdict | null>(serverVerdict);
   const [voting, setVoting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [nextDisputeId, setNextDisputeId] = useState<string | null>(null);
+  const [nextDisputeId, setNextDisputeId] = useState<string | null>(initialNextDisputeId);
   const [copied, setCopied] = useState(false);
-  const [comments, setComments] = useState<AIComment[]>([]);
+  const [comments, setComments] = useState<AIComment[]>(initialComments);
 
   useEffect(() => {
     const participant = localStorage.getItem(`participant-${disputeId}`);
     const localVote = localStorage.getItem(`vote-${disputeId}`);
 
-    // Participants (Person A or B) skip voting entirely
+    // Participants (Person A or B) — reveal immediately with server-side data
     if (participant) {
       setIsParticipant(true);
       setRevealed(true);
-      // Fetch verdict + counts directly
-      fetch(`/api/disputes/${disputeId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setVerdict({
-            text: data.verdict_text,
-            winner: data.verdict_winner,
-          });
-        })
-        .catch(() => {});
-      fetch(`/api/disputes/${disputeId}/vote`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.counts) setCounts(data.counts);
-        })
-        .catch(() => {});
-      fetchComments();
-      fetchNextDispute();
       setLoading(false);
       return;
     }
 
-    // Non-participant: check if already voted
+    // Non-participant: check if already voted (needs IP/cookie, must be client-side)
     async function checkVoteStatus() {
       try {
         const res = await fetch(`/api/disputes/${disputeId}/vote`);
@@ -98,19 +92,16 @@ export default function DisputeView({
         if (data.voted || localVote) {
           setRevealed(true);
           setYourChoice(data.yourChoice || localVote);
-          setCounts(data.counts);
-          setVerdict(data.verdict);
+          if (data.counts) setCounts(data.counts);
+          if (data.verdict) setVerdict(data.verdict);
           if (data.yourChoice) {
             localStorage.setItem(`vote-${disputeId}`, data.yourChoice);
           }
-          fetchComments();
-          fetchNextDispute();
         }
       } catch {
         if (localVote) {
           setRevealed(true);
           setYourChoice(localVote);
-          fetchNextDispute();
         }
       } finally {
         setLoading(false);
@@ -119,22 +110,6 @@ export default function DisputeView({
 
     checkVoteStatus();
   }, [disputeId]);
-
-  function fetchComments() {
-    fetch(`/api/disputes/${disputeId}/comments`)
-      .then((res) => res.json())
-      .then((data) => setComments(data.comments || []))
-      .catch(() => {});
-  }
-
-  function fetchNextDispute() {
-    fetch(`/api/disputes/next?exclude=${disputeId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.id) setNextDisputeId(data.id);
-      })
-      .catch(() => {});
-  }
 
   async function handleVote(choice: "person_a" | "person_b") {
     setVoting(true);
@@ -150,11 +125,14 @@ export default function DisputeView({
       if (res.ok || data.alreadyVoted) {
         setRevealed(true);
         setYourChoice(choice);
-        setCounts(data.counts);
-        setVerdict(data.verdict);
+        if (data.counts) setCounts(data.counts);
+        if (data.verdict) setVerdict(data.verdict);
         localStorage.setItem(`vote-${disputeId}`, choice);
-        fetchComments();
-        fetchNextDispute();
+        // Refresh comments in case new ones arrived since page load
+        fetch(`/api/disputes/${disputeId}/comments`)
+          .then((r) => r.json())
+          .then((d) => setComments(d.comments || []))
+          .catch(() => {});
       }
     } catch {
       // User can try again
