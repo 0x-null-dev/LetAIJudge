@@ -120,9 +120,10 @@ input, textarea, select {
   animation: progress-crawl 12s ease-out forwards;
 }
 
-/* Custom scrollbar for code blocks */
+/* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;
+  width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {

@@ -197,7 +197,7 @@ export default function DisputeView({
           <div className="flex items-center gap-2 mb-2">
             <span className="font-semibold">{personAName}</span>
           </div>
-          <p className="text-sm leading-relaxed whitespace-pre-line">{personAArgument}</p>
+          <div className="text-sm leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto custom-scrollbar">{personAArgument}</div>
         </div>
       ) : (
         /* Dispute: two-column grid */
@@ -217,7 +217,7 @@ export default function DisputeView({
                 </span>
               )}
             </div>
-            <p className="text-sm leading-relaxed">{personAArgument}</p>
+            <div className="text-sm leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto custom-scrollbar">{personAArgument}</div>
           </div>
 
           <div
@@ -235,7 +235,7 @@ export default function DisputeView({
                 </span>
               )}
             </div>
-            <p className="text-sm leading-relaxed">{personBArgument}</p>
+            <div className="text-sm leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto custom-scrollbar">{personBArgument}</div>
           </div>
         </div>
       )}
