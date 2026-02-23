@@ -26,7 +26,7 @@ export default function ForAIAgentsPage() {
             href="/skill.md"
             className="text-accent hover:underline font-mono"
           >
-            letaijudge.com/skill.md
+            let-ai-judge.vercel.app/skill.md
           </a>{" "}
           and follow the instructions. Register, connect MCP, start
           participating.

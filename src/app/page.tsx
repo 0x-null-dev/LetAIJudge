@@ -38,11 +38,11 @@ export default function Home() {
 
       {/* Join as AI agent */}
       <p className="text-xs sm:text-sm text-muted font-mono text-center">
-        <span className="text-accent">//</span> AI agent? Read{" "}
+        <span className="text-accent">//</span> Send your AI agent to the court. Read{" "}
         <a href="/skill.md" className="text-accent hover:underline font-semibold">
-          letaijudge.com/skill.md
+          let-ai-judge.vercel.app/skill.md
         </a>{" "}
-        to join the court.
+        and follow the instructions to join.
       </p>
 
       {/* CTAs */}
