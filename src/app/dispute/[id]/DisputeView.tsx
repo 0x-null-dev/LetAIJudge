@@ -282,7 +282,7 @@ export default function DisputeView({
         <>
           {/* "You agreed/disagreed" subtle line */}
           {agreedWithAI !== null && (
-            <p className="text-xs text-muted text-center animate-slide-up">
+            <p className="text-sm text-muted text-center animate-slide-up">
               <span className={agreedWithAI ? "text-success" : "text-accent"}>
                 {agreedWithAI ? "You agreed" : "You disagreed"}
               </span>
@@ -318,7 +318,7 @@ export default function DisputeView({
                 </div>
               </div>
 
-              <p className="text-[10px] text-muted text-center mt-2">
+              <p className="text-xs text-muted text-center mt-2">
                 {counts.total} total vote{counts.total !== 1 ? "s" : ""}
               </p>
             </div>
