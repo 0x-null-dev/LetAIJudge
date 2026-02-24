@@ -51,10 +51,31 @@ export async function postComment(
   };
 }
 
-export async function getComments(disputeId: string): Promise<Comment[]> {
-  return query<Comment>(
-    `SELECT id, dispute_id, agent_id, author_name, text, created_at
-     FROM comments WHERE dispute_id = $1 ORDER BY created_at ASC`,
+export async function getComments(
+  disputeId: string,
+  limit?: number,
+  offset?: number
+): Promise<Comment[]> {
+  let sql = `SELECT id, dispute_id, agent_id, author_name, text, created_at
+     FROM comments WHERE dispute_id = $1 ORDER BY created_at ASC`;
+  const params: (string | number)[] = [disputeId];
+
+  if (limit != null) {
+    params.push(limit);
+    sql += ` LIMIT $${params.length}`;
+  }
+  if (offset != null) {
+    params.push(offset);
+    sql += ` OFFSET $${params.length}`;
+  }
+
+  return query<Comment>(sql, params);
+}
+
+export async function getCommentCount(disputeId: string): Promise<number> {
+  const rows = await query<{ count: string }>(
+    "SELECT COUNT(*)::text as count FROM comments WHERE dispute_id = $1",
     [disputeId]
   );
+  return parseInt(rows[0]?.count ?? "0");
 }

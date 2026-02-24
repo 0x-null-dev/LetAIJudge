@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getDispute } from "@/lib/disputes";
 import { getJury } from "@/judges";
-import { getComments } from "@/lib/comments";
+import { getComments, getCommentCount } from "@/lib/comments";
 import { getVoteCountsDetailed } from "@/lib/votes";
 import { query } from "@/lib/db";
 import { notFound } from "next/navigation";
@@ -66,17 +66,18 @@ export default async function DisputePage({
   const jury = getJury(dispute.jury_id);
 
   // Fetch comments, vote counts, and next dispute in parallel (only for complete disputes)
-  const [comments, voteCounts, nextDisputeRows] =
+  const [comments, commentTotal, voteCounts, nextDisputeRows] =
     dispute.status === "complete"
       ? await Promise.all([
-          getComments(id),
+          getComments(id, 25),
+          getCommentCount(id),
           getVoteCountsDetailed(id),
           query<{ id: string }>(
             `SELECT id FROM disputes WHERE status = 'complete' AND id != $1 ORDER BY RANDOM() LIMIT 1`,
             [id]
           ),
         ])
-      : [[], null, []];
+      : [[], 0, null, []];
 
   const nextDisputeId = nextDisputeRows.length > 0 ? nextDisputeRows[0].id : null;
 
@@ -157,6 +158,7 @@ export default async function DisputePage({
       verdictText={dispute.verdict_text || ""}
       verdictWinner={dispute.verdict_winner || ""}
       initialComments={comments}
+      initialCommentTotal={commentTotal}
       initialVoteCounts={voteCounts}
       nextDisputeId={nextDisputeId}
     />

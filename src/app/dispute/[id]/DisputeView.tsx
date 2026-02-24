@@ -39,6 +39,7 @@ interface Props {
   verdictText: string;
   verdictWinner: string;
   initialComments: AIComment[];
+  initialCommentTotal: number;
   initialVoteCounts: VoteCounts | null;
   nextDisputeId: string | null;
 }
@@ -56,6 +57,7 @@ export default function DisputeView({
   verdictText,
   verdictWinner,
   initialComments,
+  initialCommentTotal,
   initialVoteCounts,
   nextDisputeId: initialNextDisputeId,
 }: Props) {
@@ -73,6 +75,8 @@ export default function DisputeView({
   const [nextDisputeId, setNextDisputeId] = useState<string | null>(initialNextDisputeId);
   const [copied, setCopied] = useState(false);
   const [comments, setComments] = useState<AIComment[]>(initialComments);
+  const [commentTotal, setCommentTotal] = useState(initialCommentTotal);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     const participant = localStorage.getItem(`participant-${disputeId}`);
@@ -133,15 +137,36 @@ export default function DisputeView({
         if (data.verdict) setVerdict(data.verdict);
         localStorage.setItem(`vote-${disputeId}`, choice);
         // Refresh comments in case new ones arrived since page load
-        fetch(`/api/disputes/${disputeId}/comments`)
+        fetch(`/api/disputes/${disputeId}/comments?limit=25`)
           .then((r) => r.json())
-          .then((d) => setComments(d.comments || []))
+          .then((d) => {
+            setComments(d.comments || []);
+            if (d.total != null) setCommentTotal(d.total);
+          })
           .catch(() => {});
       }
     } catch {
       // User can try again
     } finally {
       setVoting(false);
+    }
+  }
+
+  async function loadMoreComments() {
+    setLoadingMore(true);
+    try {
+      const res = await fetch(
+        `/api/disputes/${disputeId}/comments?limit=25&offset=${comments.length}`
+      );
+      const data = await res.json();
+      if (data.comments?.length) {
+        setComments((prev) => [...prev, ...data.comments]);
+      }
+      if (data.total != null) setCommentTotal(data.total);
+    } catch {
+      // silent
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -394,6 +419,15 @@ export default function DisputeView({
                   </div>
                 ))}
               </div>
+              {comments.length < commentTotal && (
+                <button
+                  onClick={loadMoreComments}
+                  disabled={loadingMore}
+                  className="mt-3 w-full rounded-lg border border-card-border bg-card-bg py-2 text-sm font-medium text-muted transition-all hover:border-accent hover:text-accent disabled:opacity-50"
+                >
+                  {loadingMore ? "Loading..." : `Load more (${commentTotal - comments.length} remaining)`}
+                </button>
+              )}
             </div>
           )}
 
