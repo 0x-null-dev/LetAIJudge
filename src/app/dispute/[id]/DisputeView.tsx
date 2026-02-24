@@ -8,6 +8,10 @@ interface VoteCounts {
   total: number;
   ai_votes?: number;
   human_votes?: number;
+  ai_person_a?: number;
+  ai_person_b?: number;
+  human_person_a?: number;
+  human_person_b?: number;
 }
 
 interface Verdict {
@@ -164,18 +168,23 @@ export default function DisputeView({
   const agreedWithAI =
     yourChoice && verdict ? yourChoice === verdict.winner : null;
 
-  const personAPercent =
-    counts && counts.total > 0
-      ? Math.round((counts.person_a / counts.total) * 100)
-      : 0;
-  const personBPercent =
-    counts && counts.total > 0
-      ? Math.round((counts.person_b / counts.total) * 100)
-      : 0;
+  // Compute per-group winning side percentages
+  const humanTotal = (counts?.human_person_a ?? 0) + (counts?.human_person_b ?? 0);
+  const aiTotal = (counts?.ai_person_a ?? 0) + (counts?.ai_person_b ?? 0);
 
-  // Labels for vote bar
-  const labelA = isSolo ? "Asshole" : personAName;
-  const labelB = isSolo ? "Not" : personBName;
+  function groupWinnerLabel(groupA: number, groupB: number): { label: string; pct: number } | null {
+    const total = groupA + groupB;
+    if (total === 0) return null;
+    const winnerIsA = groupA >= groupB;
+    const pct = Math.round(((winnerIsA ? groupA : groupB) / total) * 100);
+    const label = isSolo
+      ? (winnerIsA ? "The Asshole" : "Not The Asshole")
+      : (winnerIsA ? personAName : personBName);
+    return { label, pct };
+  }
+
+  const humanWinner = groupWinnerLabel(counts?.human_person_a ?? 0, counts?.human_person_b ?? 0);
+  const aiWinner = groupWinnerLabel(counts?.ai_person_a ?? 0, counts?.ai_person_b ?? 0);
 
   return (
     <div className="py-2 sm:py-6 flex flex-col gap-6">
@@ -271,80 +280,46 @@ export default function DisputeView({
       {/* Revealed section */}
       {revealed && (
         <>
-          {/* "You agreed/disagreed" badge */}
-          {agreedWithAI !== null && !isParticipant && (
-            <div
-              className={`text-center py-2 animate-slide-up ${
-                agreedWithAI ? "text-success" : "text-accent"
-              }`}
-            >
-              <p className="text-lg font-bold">
-                {agreedWithAI
-                  ? "You agreed with the AI jury!"
-                  : "You disagreed with the AI jury!"}
-              </p>
-              <p className="text-xs text-muted mt-0.5">
-                {isSolo ? (
-                  <>
-                    You voted{" "}
-                    <span className="font-semibold">
-                      {yourChoice === "person_a" ? "The Asshole" : "Not The Asshole"}
-                    </span>
-                    {" "}&middot; AI ruled{" "}
-                    <span className="font-semibold">{winnerLabel}</span>
-                  </>
-                ) : (
-                  <>
-                    You sided with{" "}
-                    <span className="font-semibold">
-                      {yourChoice === "person_a" ? personAName : personBName}
-                    </span>
-                    {" "}&middot; AI ruled for{" "}
-                    <span className="font-semibold">{winnerLabel}</span>
-                  </>
-                )}
-              </p>
-            </div>
+          {/* "You agreed/disagreed" subtle line */}
+          {agreedWithAI !== null && (
+            <p className="text-xs text-muted text-center animate-slide-up">
+              <span className={agreedWithAI ? "text-success" : "text-accent"}>
+                {agreedWithAI ? "You agreed" : "You disagreed"}
+              </span>
+              {" "}&middot; voted{" "}
+              <span className="font-medium text-foreground">
+                {isSolo
+                  ? (yourChoice === "person_a" ? "The Asshole" : "Not The Asshole")
+                  : (yourChoice === "person_a" ? personAName : personBName)}
+              </span>
+            </p>
           )}
 
-          {/* Vote results bar */}
+          {/* Vote results — Human vs AI side by side */}
           {counts && counts.total > 0 && (
-            <div className="py-1">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-medium w-16 text-right truncate">
-                  {labelA}
-                </span>
-                <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden flex">
-                  <div
-                    className="h-full bg-accent rounded-l-full flex items-center justify-end pr-2 transition-all duration-700"
-                    style={{ width: `${Math.max(personAPercent, 5)}%` }}
-                  >
-                    {personAPercent > 20 && (
-                      <span className="text-[10px] font-bold text-white">
-                        {personAPercent}%
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="h-full bg-foreground/60 rounded-r-full flex items-center justify-start pl-2 transition-all duration-700"
-                    style={{ width: `${Math.max(personBPercent, 5)}%` }}
-                  >
-                    {personBPercent > 20 && (
-                      <span className="text-[10px] font-bold text-white">
-                        {personBPercent}%
-                      </span>
-                    )}
-                  </div>
+            <div className="animate-slide-up">
+              <div className="grid grid-cols-2 gap-3">
+                {/* Humans box */}
+                <div className="rounded-xl border border-card-border bg-card-bg p-4 text-center">
+                  <p className="text-xs font-mono uppercase tracking-wider text-muted mb-1">Humans</p>
+                  <p className="text-2xl font-bold">{humanTotal}</p>
+                  {humanWinner && (
+                    <p className="text-xs text-accent font-semibold mt-1">{humanWinner.pct}% {humanWinner.label}</p>
+                  )}
                 </div>
-                <span className="text-xs font-medium w-16 truncate">
-                  {labelB}
-                </span>
+
+                {/* AI box */}
+                <div className="rounded-xl border border-card-border bg-card-bg p-4 text-center">
+                  <p className="text-xs font-mono uppercase tracking-wider text-muted mb-1">AI Agents</p>
+                  <p className="text-2xl font-bold">{aiTotal}</p>
+                  {aiWinner && (
+                    <p className="text-xs text-accent font-semibold mt-1">{aiWinner.pct}% {aiWinner.label}</p>
+                  )}
+                </div>
               </div>
-              <p className="text-[10px] text-muted text-center">
-                {counts.total} vote{counts.total !== 1 ? "s" : ""}
-                {counts.ai_votes && counts.ai_votes > 0 && (
-                  <span> ({counts.ai_votes} from AI agents)</span>
-                )}
+
+              <p className="text-[10px] text-muted text-center mt-2">
+                {counts.total} total vote{counts.total !== 1 ? "s" : ""}
               </p>
             </div>
           )}

@@ -13,6 +13,10 @@ export interface DetailedVoteCounts {
   total: number;
   ai_votes: number;
   human_votes: number;
+  ai_person_a: number;
+  ai_person_b: number;
+  human_person_a: number;
+  human_person_b: number;
 }
 
 export async function castVote(
@@ -108,16 +112,32 @@ export async function getVoteCountsDetailed(disputeId: string): Promise<Detailed
   let person_b = 0;
   let ai_votes = 0;
   let human_votes = 0;
+  let ai_person_a = 0;
+  let ai_person_b = 0;
+  let human_person_a = 0;
+  let human_person_b = 0;
 
   for (const row of rows) {
     const count = parseInt(row.count);
     if (row.choice === "person_a") person_a += count;
     if (row.choice === "person_b") person_b += count;
-    if (row.voter_type === "ai") ai_votes += count;
-    if (row.voter_type === "human") human_votes += count;
+    if (row.voter_type === "ai") {
+      ai_votes += count;
+      if (row.choice === "person_a") ai_person_a = count;
+      if (row.choice === "person_b") ai_person_b = count;
+    }
+    if (row.voter_type === "human") {
+      human_votes += count;
+      if (row.choice === "person_a") human_person_a = count;
+      if (row.choice === "person_b") human_person_b = count;
+    }
   }
 
-  return { person_a, person_b, total: person_a + person_b, ai_votes, human_votes };
+  return {
+    person_a, person_b, total: person_a + person_b,
+    ai_votes, human_votes,
+    ai_person_a, ai_person_b, human_person_a, human_person_b,
+  };
 }
 
 export async function hasVoted(
