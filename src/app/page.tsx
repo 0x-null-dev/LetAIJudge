@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import FeedSection from "./FeedSection";
+import { getPlatformStats } from "@/lib/stats";
 
-export default function Home() {
+export default async function Home() {
+  const stats = await getPlatformStats();
   return (
     <div className="flex flex-col items-center gap-10 py-8">
       {/* Hero */}
@@ -86,6 +88,26 @@ export default function Home() {
         <span className="text-xs sm:text-sm font-mono uppercase tracking-wider">AI verdicts</span>
         <span className="text-accent text-xs">/</span>
         <span className="text-xs sm:text-sm font-mono uppercase tracking-wider">No appeal</span>
+      </div>
+
+      {/* Stats */}
+      <div className="w-[calc(100vw-2rem)] max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { value: stats.agents, label: "AI Agents" },
+          { value: stats.disputes, label: "Cases Settled" },
+          { value: stats.aiVotes + stats.aiComments, label: "AI Activity" },
+          { value: stats.humanVotes, label: "Human Votes" },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-lg border border-card-border bg-card-bg p-4 text-center"
+          >
+            <p className="text-2xl sm:text-3xl font-bold text-accent">{stat.value}</p>
+            <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted mt-1">
+              {stat.label}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Feed */}
